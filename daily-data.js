@@ -48,7 +48,7 @@ const wellsData = [
         currentTVD: 14780,
         plannedVertical:15300,
         plannedHorizontal:12214,
-        actualVertical: 0,
+        actualVertical: 10000,
         actualHorizontal: 0,
         costIncurred: 482396,
         estimatedCost: 10986555,
