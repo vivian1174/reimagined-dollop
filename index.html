@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FPCC USA - Drilling Dashboard</title>
+    <style>
+        :root {
+            --bg-black: #0f0f0f;
+            --card-bg: rgba(30, 30, 30, 0.7);
+            --accent-yellow: #fbbf24;
+            --text-main: #ffffff;
+            --text-muted: #888888;
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        body { margin: 0; background-color: var(--bg-black); font-family: 'Segoe UI', sans-serif; color: var(--text-main); }
+        .site-header { padding: 20px 40px; border-bottom: 1px solid #222; display: flex; justify-content: space-between; align-items: center; }
+        .nav-logo { font-weight: 900; font-size: 1.5rem; color: var(--accent-yellow); letter-spacing: 2px; }
+        .drilling-container { max-width: 1400px; margin: 40px auto; padding: 0 20px; }
+        .well-unit { margin-bottom: 100px; background: rgba(20,20,20,0.5); padding: 30px; border-radius: 20px; border: 1px solid #222; }
+        .dashboard-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; }
+        .well-info h1 { margin: 0; font-size: 2.2rem; color: var(--accent-yellow); text-transform: uppercase; }
+        
+        .status-badge {
+            padding: 8px 16px; border-radius: 50px; font-weight: bold; font-size: 0.8rem;
+            border: 1px solid; display: flex; align-items: center; gap: 8px;
+        }
+
+        .visual-stage {
+            position: relative; width: 100%; height: 600px;
+            background: linear-gradient(180deg, #161616 0%, #0a0a0a 100%);
+            border-radius: 16px; border: 1px solid #333; overflow: hidden;
+        }
+
+        /* 玻璃框樣式 */
+        .glass-frame {
+            position: absolute; background: var(--card-bg); backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border); padding: 20px; border-radius: 12px; z-index: 10;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        }
+
+        .pos-data-main { top: 40px; right: 300px; width: 220px; }
+        .pos-cost-main { top: 40px; right: 40px; width: 220px; text-align: right; }
+        .pos-rop-mw { bottom: 40px; right: 40px; display: flex; gap: 30px; }
+
+        .label-sm { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; }
+        .value-lg { font-size: 1.6rem; font-weight: bold; }
+        .value-gold { color: var(--accent-yellow); font-size: 2rem; font-weight: 900; }
+        
+        .well-bore-diagram { width: 100%; height: 100%; }
+        .path-actual { fill: none; stroke-width: 15; stroke-linecap: round; filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.3)); }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <div class="nav-logo">FPCC USA</div>
+        <div id="status-tag" style="color: #4ade80; font-size: 0.8rem; letter-spacing: 1px;">● LIVE SYSTEM ACTIVE</div>
+    </header>
+
+    <div id="wells-container" class="drilling-container">
+        <div style="text-align: center; padding: 100px; color: #555;">Loading Drilling Data...</div>
+    </div>
+
+    <script src="daily-data.js"></script>
+
+    <script>
+        function render() {
+            const container = document.getElementById('wells-container');
+            if (typeof wellsData === 'undefined') {
+                container.innerHTML = `<div style="color:red; text-align:center; padding:50px;">Error: daily-data.js failed to load.</div>`;
+                return;
+            }
+
+            container.innerHTML = '';
+            // 排序：進行中的排前面
+            [...wellsData].sort((a, b) => b.isActive - a.isActive).forEach(well => {
+                const startX = 150, startY = 50, curveRadius = 80;
+                // 按 15000ft 比例縮放
+                const vLen = ((well.actualVertical || 0) / 15000) * 350;
+                const hLen = ((well.actualHorizontal || 0) / 15000) * 500;
+                const pathD = `M ${startX},${startY} L ${startX},${startY + vLen} Q ${startX},${startY + vLen + curveRadius} ${startX + curveRadius},${startY + vLen + curveRadius} L ${startX + curveRadius + hLen},${startY + vLen + curveRadius}`;
+
+                const wellEl = document.createElement('div');
+                wellEl.className = 'well-unit';
+                wellEl.innerHTML = `
+                    <div class="dashboard-header">
+                        <div class="well-info">
+                            <h1>${well.wellName}</h1>
+                            <div style="color: #888;">${well.location}</div>
+                        </div>
+                        <div class="status-badge" style="border-color: ${well.isActive ? '#fbbf24' : '#555'}; color: ${well.isActive ? '#fbbf24' : '#555'};">
+                            <span style="width:8px; height:8px; border-radius:50%; background:${well.isActive ? '#fbbf24' : '#555'}"></span>
+                            ${well.status}
+                        </div>
+                    </div>
+
+                    <div class="visual-stage">
+                        <div class="glass-frame pos-data-main">
+                            <div class="label-sm">Measured Depth</div>
+                            <div class="value-lg">${(well.currentMD || 0).toLocaleString()} <small>FT</small></div>
+                            <div style="margin-top:15px" class="label-sm">True Vertical Depth</div>
+                            <div class="value-lg">${(well.currentTVD || 0).toLocaleString()} <small>FT</small></div>
+                        </div>
+
+                        <div class="glass-frame pos-cost-main">
+                            <div class="label-sm">Daily Report: ${well.reportDate}</div>
+                            <div class="value-gold">$${(well.costIncurred || 0).toLocaleString()}</div>
+                            <div style="margin-top:10px" class="label-sm">AFE Total Estimate</div>
+                            <div style="font-weight:bold">$${(well.estimatedCost || 0).toLocaleString()}</div>
+                        </div>
+
+                        <div class="glass-frame pos-rop-mw">
+                            <div><div class="label-sm">ROP</div><div class="value-lg">${well.rop || 0} <small>ft/hr</small></div></div>
+                            <div style="width:1px; background:rgba(255,255,255,0.2)"></div>
+                            <div><div class="label-sm">MW</div><div class="value-lg">${well.mudWeight || 0} <small>ppg</small></div></div>
+                        </div>
+
+                        <svg class="well-bore-diagram" viewBox="0 0 800 600">
+                            <path d="${pathD}" class="path-actual" stroke="${well.isActive ? '#fbbf24' : '#444'}" />
+                            <circle cx="${startX}" cy="${startY}" r="8" fill="#555" />
+                            <circle cx="${startX + curveRadius + hLen}" cy="${startY + vLen + curveRadius}" r="10" fill="${well.isActive ? '#fbbf24' : '#444'}" />
+                        </svg>
+                    </div>
+
+                    <div style="margin-top: 25px; padding: 20px; background: rgba(255,255,255,0.03); border-radius: 12px; border-left: 4px solid ${well.isActive ? '#fbbf24' : '#555'};">
+                        <div class="label-sm" style="color: ${well.isActive ? '#fbbf24' : '#555'};">Engineer Operations Summary</div>
+                        <p style="margin: 10px 0 0; line-height: 1.6; color: #ccc; white-space: pre-wrap;">${well.dailyNotes || "No updates for this period."}</p>
+                    </div>
+                `;
+                container.appendChild(wellEl);
+            });
+        }
+        window.onload = render;
+    </script>
+</body>
+</html>
