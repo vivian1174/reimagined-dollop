@@ -33,21 +33,4 @@ const wellsData = [
         mudWeight: 12.5,
         dailyNotes: "Rig move in progress."
     },
-    {
-        id: "W-2025-003",
-        wellName: "WY CO 2-35-26HC NO.3",
-        isActive: false,
-        location: "Bienville Parish, LA",
-        status: "Waiting for rig",
-        reportDate: "2025/12/15",
-        currentMD: 0,
-        currentTVD: 0,
-        actualVertical: 11000,
-        actualHorizontal: 11000,
-        costIncurred: 482396,
-        estimatedCost: 10986555,
-        rop: 0,
-        mudWeight: 12.5,
-        dailyNotes: "Rig move in progress."
-    }
 ];
