@@ -2,194 +2,136 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FPCC USA | Operations Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=JetBrains+Mono:wght@500;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;800&family=Inter:wght@700;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-black: #050505;
-            --glass-bg: rgba(25, 25, 25, 0.85);
-            --accent-gold: #fbbf24;
-            --border-bright: rgba(255, 255, 255, 0.2);
-            --text-main: #ffffff;
-            --text-muted: #94a3b8;
+            --bg: #050505;
+            --gold: #fbbf24;
+            --glass: rgba(30, 30, 30, 0.85);
+            --border: rgba(255, 255, 255, 0.15);
         }
-
-        body { 
-            margin: 0; 
-            background-color: var(--bg-black); 
-            font-family: 'Inter', sans-serif; 
-            color: var(--text-main); 
-            overflow-x: hidden;
-        }
-
-        .site-header { 
-            padding: 20px 50px; 
-            background: rgba(0,0,0,0.9);
-            border-bottom: 2px solid #1a1a1a;
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-        }
-
-        .nav-logo { font-weight: 900; font-size: 1.6rem; color: var(--accent-gold); letter-spacing: 3px; }
-
-        .drilling-container { max-width: 1500px; margin: 50px auto; padding: 0 30px; }
-
+        body { margin: 0; background: var(--bg); font-family: 'Inter', sans-serif; color: white; }
+        .drilling-container { max-width: 1400px; margin: 40px auto; padding: 0 20px; }
+        
         /* 井位單元 */
         .well-unit { 
-            margin-bottom: 80px; 
-            background: #111; 
-            border-radius: 24px; 
-            padding: 35px;
-            border: 1px solid #222;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            background: #111; border-radius: 20px; padding: 30px; margin-bottom: 60px;
+            border: 1px solid #222; box-shadow: 0 20px 40px rgba(0,0,0,0.6);
         }
 
-        /* 標題與日期 */
-        .dashboard-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 35px; }
-        .well-info h1 { margin: 0; font-size: 2.5rem; font-weight: 900; color: var(--accent-gold); letter-spacing: -1px; }
-        .well-info .location { color: var(--text-muted); font-size: 1.1rem; margin-top: 8px; font-weight: 500; }
-
-        .status-box { text-align: right; }
-        .report-date { font-family: 'JetBrains Mono'; font-size: 1rem; color: var(--accent-gold); margin-bottom: 12px; font-weight: bold; }
-        .status-badge {
-            padding: 10px 20px; border-radius: 8px; font-weight: 800; font-size: 0.85rem;
-            border: 2px solid; display: inline-flex; align-items: center; gap: 10px;
-            background: rgba(0,0,0,0.3);
-        }
-
-        /* 視覺舞台：背景漸變加深 */
+        /* 標題與日期欄 */
+        .header-flex { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; }
+        .well-name { font-size: 2.2rem; font-weight: 900; color: var(--gold); margin: 0; }
+        .date-badge { font-family: 'JetBrains Mono'; color: var(--gold); font-size: 1rem; margin-bottom: 10px; text-align: right; }
+        
+        /* 視覺區域 */
         .visual-stage {
-            position: relative; width: 100%; height: 600px;
-            background: radial-gradient(circle at 10% 10%, #1e1e1e 0%, #050505 100%);
-            border-radius: 20px; border: 1px solid #333; overflow: hidden;
+            position: relative; width: 100%; height: 580px;
+            background: radial-gradient(circle at 15% 15%, #222 0%, #050505 100%);
+            border-radius: 15px; border: 1px solid #333; overflow: hidden;
         }
 
-        /* 玻璃卡片：大幅加強對比與模糊 */
-        .glass-frame {
-            position: absolute; 
-            background: linear-gradient(135deg, rgba(45,45,45,0.9) 0%, rgba(20,20,20,0.9) 100%);
-            backdrop-filter: blur(20px); 
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--border-bright); 
-            padding: 25px; 
-            border-radius: 16px; 
-            z-index: 10;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.05);
+        /* 玻璃框精確對齊 */
+        .hud {
+            position: absolute; background: var(--glass); backdrop-filter: blur(15px);
+            border: 2px solid var(--border); padding: 20px; border-radius: 12px; z-index: 10;
+        }
+        .hud-top-1 { top: 30px; right: 285px; width: 220px; } /* MD/TVD */
+        .hud-top-2 { top: 30px; right: 30px; width: 220px; text-align: right; } /* Cost/AFE */
+        .hud-bottom { bottom: 30px; right: 30px; display: flex; gap: 30px; min-width: 300px; justify-content: flex-end; }
+
+        .label { font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+        .num { font-family: 'JetBrains Mono'; font-size: 1.6rem; font-weight: 800; }
+        .num-gold { color: var(--gold); font-size: 2rem; }
+
+        /* SVG 軌跡：加粗並確保疊加 */
+        .path-bg { fill: none; stroke: #222; stroke-width: 20; stroke-linecap: round; }
+        .path-act { 
+            fill: none; stroke-width: 20; stroke-linecap: round; 
+            filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.4));
         }
 
-        /* 嚴格對齊 */
-        .pos-md-tvd { top: 40px; right: 320px; width: 240px; }
-        .pos-cost-afe { top: 40px; right: 40px; width: 240px; text-align: right; }
-        .pos-rop-mw { bottom: 40px; right: 40px; display: flex; gap: 40px; min-width: 350px; justify-content: flex-end; }
-
-        .label-sm { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; letter-spacing: 2px; font-weight: 700; }
-        .value-lg { font-size: 1.8rem; font-weight: 800; font-family: 'JetBrains Mono'; color: #fff; }
-        .value-gold { color: var(--accent-gold); font-size: 2.2rem; font-weight: 800; font-family: 'JetBrains Mono'; }
-
-        /* 井位繪圖 */
-        .well-bore-diagram { width: 100%; height: 100%; }
-        .path-bg { fill: none; stroke: #222; stroke-width: 18; stroke-linecap: round; } /* 固定背景管徑 */
-        .path-actual { 
-            fill: none; stroke-width: 18; stroke-linecap: round; 
-            filter: drop-shadow(0 0 12px rgba(251, 191, 36, 0.5));
-        }
-
-        /* 工程筆記 */
-        .notes-section {
-            margin-top: 30px; padding: 25px; background: rgba(255,255,255,0.02);
-            border-radius: 12px; border: 1px solid #222;
+        .notes { 
+            margin-top: 25px; padding: 20px; background: rgba(255,255,255,0.03); 
+            border-radius: 10px; border-left: 5px solid var(--gold);
         }
     </style>
 </head>
 <body>
-    <header class="site-header">
-        <div class="nav-logo">FPCC USA DASHBOARD</div>
-        <div style="font-family: 'JetBrains Mono'; color: #4ade80; font-size: 0.9rem;">● LINK STATE: ACTIVE</div>
-    </header>
-
     <div id="wells-container" class="drilling-container"></div>
 
     <script src="daily-data.js"></script>
-
     <script>
-        const renderDashboard = () => {
+        const render = () => {
             const container = document.getElementById('wells-container');
             if (typeof wellsData === 'undefined') return;
 
             container.innerHTML = '';
             wellsData.forEach(well => {
-                // 固定背景參考 (最大長度)
-                const startX = 180, startY = 60, curveRadius = 100;
-                const maxV = (11000 / 15000) * 400;
-                const maxH = (12000 / 15000) * 600;
-                const pathBG = `M ${startX},${startY} L ${startX},${startY + maxV} Q ${startX},${startY + maxV + curveRadius} ${startX + curveRadius},${startY + maxV + curveRadius} L ${startX + curveRadius + maxH},${startY + maxV + curveRadius}`;
+                // --- 統一坐標系 ---
+                const startX = 150, startY = 50, curveR = 100;
+                // 假設背景畫到 15000ft, 12000ft
+                const bgV = (11000 / 15000) * 380; 
+                const bgH = (11000 / 15000) * 550;
+                const dBG = `M ${startX},${startY} L ${startX},${startY + bgV} Q ${startX},${startY + bgV + curveR} ${startX + curveR},${startY + bgV + curveR} L ${startX + curveR + bgH},${startY + bgV + curveR}`;
 
-                // 實際進度
-                const actV = ((well.actualVertical || 0) / 15000) * 400;
-                const actH = ((well.actualHorizontal || 0) / 15000) * 600;
-                const pathAct = `M ${startX},${startY} L ${startX},${startY + actV} Q ${startX},${startY + actV + curveRadius} ${startX + curveRadius},${startY + actV + curveRadius} L ${startX + curveRadius + actH},${startY + actV + curveRadius}`;
+                // 進度計算 (完全對齊 bg 的公式)
+                const actV = (well.actualVertical / 15000) * 380;
+                const actH = (well.actualHorizontal / 15000) * 550;
+                const dAct = `M ${startX},${startY} L ${startX},${startY + actV} Q ${startX},${startY + actV + curveR} ${startX + curveR},${startY + actV + curveR} L ${startX + curveR + actH},${startY + actV + curveR}`;
 
-                const wellEl = document.createElement('div');
-                wellEl.className = 'well-unit';
-                wellEl.innerHTML = `
-                    <div class="dashboard-header">
+                const wellDiv = document.createElement('div');
+                wellDiv.className = 'well-unit';
+                wellDiv.innerHTML = `
+                    <div class="header-flex">
                         <div class="well-info">
-                            <h1>${well.wellName}</h1>
-                            <div class="location">Location: ${well.location}</div>
+                            <h1 class="well-name">${well.wellName}</h1>
+                            <div style="color:#666">${well.location}</div>
                         </div>
-                        <div class="status-box">
-                            <div class="report-date">DATA CURRENT AS OF: ${well.reportDate}</div>
-                            <div class="status-badge" style="border-color: ${well.isActive ? '#fbbf24' : '#444'}; color: ${well.isActive ? '#fbbf24' : '#444'};">
-                                <span style="width:10px; height:10px; border-radius:50%; background:${well.isActive ? '#fbbf24' : '#444'}"></span>
+                        <div class="status-group">
+                            <div class="date-badge">REPORT DATE: ${well.reportDate}</div>
+                            <div style="border: 1px solid ${well.isActive ? 'var(--gold)' : '#444'}; color: ${well.isActive ? 'var(--gold)' : '#444'}; padding: 5px 15px; border-radius: 5px; font-weight:bold; font-size:0.8rem; text-align:center;">
                                 ${well.status}
                             </div>
                         </div>
                     </div>
 
                     <div class="visual-stage">
-                        <div class="glass-frame pos-md-tvd">
-                            <div class="label-sm">Measured Depth</div>
-                            <div class="value-lg">${(well.currentMD || 0).toLocaleString()} <small>FT</small></div>
-                            <div style="margin-top:20px" class="label-sm">True Vertical Depth</div>
-                            <div class="value-lg">${(well.currentTVD || 0).toLocaleString()} <small>FT</small></div>
+                        <div class="hud hud-top-1">
+                            <div class="label">Measured Depth</div>
+                            <div class="num">${well.currentMD.toLocaleString()} <small>FT</small></div>
+                            <div style="margin-top:15px" class="label">True Vertical</div>
+                            <div class="num">${well.currentTVD.toLocaleString()} <small>FT</small></div>
+                        </div>
+                        <div class="hud hud-top-2">
+                            <div class="label">Incurred Cost</div>
+                            <div class="num num-gold">$${well.costIncurred.toLocaleString()}</div>
+                            <div style="margin-top:15px" class="label">AFE Estimate</div>
+                            <div class="num" style="color:#bbb">$${well.estimatedCost.toLocaleString()}</div>
+                        </div>
+                        <div class="hud hud-bottom">
+                            <div><div class="label">ROP</div><div class="num">${well.rop} <small>F/H</small></div></div>
+                            <div style="width:1px; background:#444"></div>
+                            <div><div class="label">MUD WT</div><div class="num">${well.mudWeight} <small>PPG</small></div></div>
                         </div>
 
-                        <div class="glass-frame pos-cost-afe">
-                            <div class="label-sm">Cumulative Cost</div>
-                            <div class="value-gold">$${(well.costIncurred || 0).toLocaleString()}</div>
-                            <div style="margin-top:15px" class="label-sm">Total AFE Estimate</div>
-                            <div style="font-weight:bold; color: #fff;">$${(well.estimatedCost || 0).toLocaleString()}</div>
-                        </div>
-
-                        <div class="glass-frame pos-rop-mw">
-                            <div style="text-align:center"><div class="label-sm">ROP</div><div class="value-lg">${well.rop || 0} <small>FT/H</small></div></div>
-                            <div style="width:2px; background:rgba(255,255,255,0.1)"></div>
-                            <div style="text-align:center"><div class="label-sm">MUD WEIGHT</div><div class="value-lg">${well.mudWeight || 0} <small>PPG</small></div></div>
-                        </div>
-
-                        <svg class="well-bore-diagram" viewBox="0 0 1000 700">
-                            <path d="${pathBG}" class="path-bg" />
-                            <path d="${pathAct}" class="path-actual" stroke="${well.isActive ? '#fbbf24' : '#555'}" />
-                            <rect x="${startX-15}" y="${startY-5}" width="30" height="10" fill="#666" />
-                            <circle cx="${startX + (actH > 0 ? curveRadius + actH : 0)}" 
-                                    cy="${startY + actV + (actH > 0 ? curveRadius : 0)}" 
-                                    r="10" fill="${well.isActive ? '#fbbf24' : '#555'}" />
+                        <svg viewBox="0 0 1000 650" style="width:100%; height:100%">
+                            <path d="${dBG}" class="path-bg" />
+                            <path d="${dAct}" class="path-act" stroke="${well.isActive ? 'var(--gold)' : '#555'}" />
+                            <circle cx="${startX}" cy="${startY}" r="8" fill="#444" />
                         </svg>
                     </div>
 
-                    <div class="notes-section">
-                        <div class="label-sm" style="color: var(--accent-gold);">ENGINEERING NOTES / REMARKS</div>
-                        <div style="font-size:1rem; line-height:1.7; color:#ddd; white-space:pre-wrap; margin-top:10px;">${well.dailyNotes || "No active remarks for this reporting cycle."}</div>
+                    <div class="notes">
+                        <div class="label" style="color:var(--gold)">Engineer's Daily Summary</div>
+                        <div style="margin-top:10px; line-height:1.6; color:#ccc">${well.dailyNotes}</div>
                     </div>
                 `;
-                container.appendChild(wellEl);
+                container.appendChild(wellDiv);
             });
         };
-
-        // 確保 DOM 讀取完畢後執行，避免 eval 錯誤
-        document.addEventListener('DOMContentLoaded', renderDashboard);
+        window.addEventListener('DOMContentLoaded', render);
     </script>
 </body>
 </html>
