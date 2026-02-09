@@ -1,5 +1,6 @@
 const wellsData = [
     {
+        id: "W-2025-001",
         wellName: "Davies 23-14-11 No. 1-Alt",
         isActive: true,
         location: "Bienville Parish, LA",
@@ -16,6 +17,7 @@ const wellsData = [
         dailyNotes: "這裡輸入當日工程摘要..."
     },
     {
+        id: "W-2025-002",
         wellName: "WY CO 2-35-26HC NO.1",
         isActive: false,
         location: "Bienville Parish, LA",
