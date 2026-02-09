@@ -278,8 +278,8 @@
                     
                     // 先重置位置以便觸發 transition
                     // (這行讓瀏覽器知道初始狀態，確保每次載入都有動畫)
-                    // pathAct.style.strokeDashoffset = fullPixelLength; 
-                    // pathAct.getBoundingClientRect(); // Trigger Reflow
+                    pathAct.style.strokeDashoffset = fullPixelLength; 
+                    pathAct.getBoundingClientRect(); // Trigger Reflow
 
                     // 設定最終位置
                     pathAct.style.strokeDashoffset = targetOffset;
