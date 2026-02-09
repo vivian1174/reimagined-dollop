@@ -3,135 +3,210 @@
 <head>
     <meta charset="UTF-8">
     <title>FPCC USA | Operations Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;800&family=Inter:wght@700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;800&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg: #050505;
             --gold: #fbbf24;
             --glass: rgba(30, 30, 30, 0.85);
-            --border: rgba(255, 255, 255, 0.15);
+            --border: rgba(255, 255, 255, 0.2);
+            --gray-path: #222;
         }
-        body { margin: 0; background: var(--bg); font-family: 'Inter', sans-serif; color: white; }
+        body { margin: 0; background: var(--bg); font-family: 'Inter', sans-serif; color: white; overflow-x: hidden; }
+        
         .drilling-container { max-width: 1400px; margin: 40px auto; padding: 0 20px; }
         
-        /* 井位單元 */
         .well-unit { 
-            background: #111; border-radius: 20px; padding: 30px; margin-bottom: 60px;
-            border: 1px solid #222; box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            background: #0a0a0a; border-radius: 24px; padding: 35px; margin-bottom: 60px;
+            border: 1px solid #222; box-shadow: 0 30px 60px rgba(0,0,0,0.8);
         }
 
-        /* 標題與日期欄 */
-        .header-flex { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; }
-        .well-name { font-size: 2.2rem; font-weight: 900; color: var(--gold); margin: 0; }
-        .date-badge { font-family: 'JetBrains Mono'; color: var(--gold); font-size: 1rem; margin-bottom: 10px; text-align: right; }
-        
-        /* 視覺區域 */
+        /* 標題區 */
+        .header-flex { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 35px; }
+        .well-name { font-size: 2rem; font-weight: 900; color: var(--gold); margin: 0; letter-spacing: -0.5px; }
+        .location { color: #666; font-size: 0.9rem; margin-top: 5px; font-weight: 500; }
+        .status-pill {
+            padding: 8px 16px; border-radius: 6px; font-weight: 700; font-size: 0.8rem;
+            text-transform: uppercase; letter-spacing: 1px; display: inline-block;
+        }
+
+        /* 視覺舞台 */
         .visual-stage {
-            position: relative; width: 100%; height: 580px;
-            background: radial-gradient(circle at 15% 15%, #222 0%, #050505 100%);
-            border-radius: 15px; border: 1px solid #333; overflow: hidden;
+            position: relative; width: 100%; height: 600px;
+            background: radial-gradient(circle at 50% 0%, #1a1a1a 0%, #000 100%);
+            border-radius: 20px; border: 1px solid #333; overflow: hidden;
         }
 
-        /* 玻璃框精確對齊 */
+        /* 玻璃儀表板 (HUD) */
         .hud {
-            position: absolute; background: var(--glass); backdrop-filter: blur(15px);
-            border: 2px solid var(--border); padding: 20px; border-radius: 12px; z-index: 10;
+            position: absolute; background: linear-gradient(145deg, rgba(40,40,40,0.9), rgba(20,20,20,0.95));
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border); padding: 25px; border-radius: 16px; z-index: 10;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
-        .hud-top-1 { top: 30px; right: 285px; width: 220px; } /* MD/TVD */
-        .hud-top-2 { top: 30px; right: 30px; width: 220px; text-align: right; } /* Cost/AFE */
-        .hud-bottom { bottom: 30px; right: 30px; display: flex; gap: 30px; min-width: 300px; justify-content: flex-end; }
+        
+        /* 嚴格對齊網格 */
+        .hud-top-left { top: 40px; right: 300px; width: 220px; } 
+        .hud-top-right { top: 40px; right: 40px; width: 220px; text-align: right; }
+        .hud-bottom { bottom: 40px; right: 40px; display: flex; gap: 40px; min-width: 350px; justify-content: flex-end; }
 
-        .label { font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
-        .num { font-family: 'JetBrains Mono'; font-size: 1.6rem; font-weight: 800; }
-        .num-gold { color: var(--gold); font-size: 2rem; }
+        .label { font-size: 0.7rem; color: #999; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; font-weight: 700; }
+        .num { font-family: 'JetBrains Mono'; font-size: 1.8rem; font-weight: 800; color: #fff; }
+        .num-gold { color: var(--gold); font-size: 2.2rem; }
 
-        /* SVG 軌跡：加粗並確保疊加 */
-        .path-bg { fill: none; stroke: #222; stroke-width: 20; stroke-linecap: round; }
-        .path-act { 
-            fill: none; stroke-width: 20; stroke-linecap: round; 
-            filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.4));
-        }
-
-        .notes { 
-            margin-top: 25px; padding: 20px; background: rgba(255,255,255,0.03); 
-            border-radius: 10px; border-left: 5px solid var(--gold);
-        }
+        /* 井身繪圖設定 */
+        .path-bg { fill: none; stroke: var(--gray-path); stroke-width: 24; stroke-linecap: round; }
+        .path-act { fill: none; stroke-width: 24; stroke-linecap: round; filter: drop-shadow(0 0 15px rgba(251, 191, 36, 0.4)); }
+        
+        /* 備註 */
+        .notes { margin-top: 30px; padding: 25px; background: rgba(255,255,255,0.03); border-radius: 12px; border-left: 4px solid var(--gold); }
     </style>
 </head>
 <body>
+    <header style="padding: 20px 40px; border-bottom: 1px solid #222; background: #000; display:flex; justify-content:space-between; align-items:center;">
+        <div style="font-weight:900; color:var(--gold); font-size:1.4rem; letter-spacing:2px;">FPCC USA</div>
+        <div style="font-family:'JetBrains Mono'; color:#4ade80; font-size:0.8rem;">● LIVE CONNECTION</div>
+    </header>
+
     <div id="wells-container" class="drilling-container"></div>
 
     <script src="daily-data.js"></script>
     <script>
-        const render = () => {
+        document.addEventListener('DOMContentLoaded', () => {
             const container = document.getElementById('wells-container');
             if (typeof wellsData === 'undefined') return;
 
             container.innerHTML = '';
+            
             wellsData.forEach(well => {
-                // --- 統一坐標系 ---
-                const startX = 150, startY = 50, curveR = 100;
-                // 假設背景畫到 15000ft, 12000ft
-                const bgV = (11000 / 15000) * 380; 
-                const bgH = (11000 / 15000) * 550;
-                const dBG = `M ${startX},${startY} L ${startX},${startY + bgV} Q ${startX},${startY + bgV + curveR} ${startX + curveR},${startY + bgV + curveR} L ${startX + curveR + bgH},${startY + bgV + curveR}`;
+                // ============================================
+                // 📐 幾何核心算法 (解決對不準的關鍵)
+                // ============================================
+                
+                // 1. 定義畫布與比例
+                // 假設全深 15000ft 對應 400px 高度
+                const SCALE_V = 400 / 15000;
+                const SCALE_H = 600 / 15000;
+                
+                // 2. 定義固定造斜點 (KOP - Kick Off Point)
+                // 這是關鍵：所有井都在 10,000ft 處開始轉彎 (視覺上)
+                const KOP_FT = 10000; 
+                const KOP_Y_PX = KOP_FT * SCALE_V; // 轉彎點的 Y 座標
 
-                // 進度計算 (完全對齊 bg 的公式)
-                const actV = (well.actualVertical / 15000) * 380;
-                const actH = (well.actualHorizontal / 15000) * 550;
-                const dAct = `M ${startX},${startY} L ${startX},${startY + actV} Q ${startX},${startY + actV + curveR} ${startX + curveR},${startY + actV + curveR} L ${startX + curveR + actH},${startY + actV + curveR}`;
+                // 3. 固定起點與半徑
+                const startX = 180;
+                const startY = 60;
+                const curveR = 100; // 轉彎半徑
 
-                const wellDiv = document.createElement('div');
-                wellDiv.className = 'well-unit';
-                wellDiv.innerHTML = `
+                // 4. 計算背景路徑 (灰色) - 畫好畫滿
+                // 垂直段(到KOP) -> 轉彎 -> 水平段(假設畫到 12000ft)
+                const bgH_Len = 12000 * SCALE_H;
+                const pathBG = `
+                    M ${startX},${startY} 
+                    L ${startX},${startY + KOP_Y_PX} 
+                    Q ${startX},${startY + KOP_Y_PX + curveR} ${startX + curveR},${startY + KOP_Y_PX + curveR} 
+                    L ${startX + curveR + bgH_Len},${startY + KOP_Y_PX + curveR}
+                `;
+
+                // 5. 計算實際路徑 (黃色) - 根據進度裁切
+                let pathAct = "";
+                let bitX = startX;
+                let bitY = startY;
+
+                const actualV = well.actualVertical || 0;
+                const actualH = well.actualHorizontal || 0;
+
+                if (actualV === 0) {
+                    // 情況 0: 還沒開始 (完全不畫)
+                    pathAct = ""; 
+                    bitY = startY; // 鑽頭停在井口
+                } 
+                else if (actualV < KOP_FT) {
+                    // 情況 A: 還在垂直段鑽井 (未達 KOP)
+                    // 只畫直線，不畫 Q (曲線)
+                    const currentLen = actualV * SCALE_V;
+                    pathAct = `M ${startX},${startY} L ${startX},${startY + currentLen}`;
+                    bitY = startY + currentLen;
+                } 
+                else {
+                    // 情況 B: 已經進入水平段
+                    // 畫滿垂直 -> 畫滿曲線 -> 畫部分水平
+                    const hLen = actualH * SCALE_H;
+                    pathAct = `
+                        M ${startX},${startY} 
+                        L ${startX},${startY + KOP_Y_PX} 
+                        Q ${startX},${startY + KOP_Y_PX + curveR} ${startX + curveR},${startY + KOP_Y_PX + curveR} 
+                        L ${startX + curveR + hLen},${startY + KOP_Y_PX + curveR}
+                    `;
+                    // 更新鑽頭位置 (水平尾端)
+                    bitX = startX + curveR + hLen;
+                    bitY = startY + KOP_Y_PX + curveR;
+                }
+
+                // ============================================
+                // 渲染 HTML
+                // ============================================
+                const isActive = well.isActive;
+                const statusColor = isActive ? 'var(--gold)' : '#555';
+
+                const wellEl = document.createElement('div');
+                wellEl.className = 'well-unit';
+                wellEl.innerHTML = `
                     <div class="header-flex">
                         <div class="well-info">
                             <h1 class="well-name">${well.wellName}</h1>
-                            <div style="color:#666">${well.location}</div>
+                            <div class="location">${well.location}</div>
                         </div>
-                        <div class="status-group">
-                            <div class="date-badge">REPORT DATE: ${well.reportDate}</div>
-                            <div style="border: 1px solid ${well.isActive ? 'var(--gold)' : '#444'}; color: ${well.isActive ? 'var(--gold)' : '#444'}; padding: 5px 15px; border-radius: 5px; font-weight:bold; font-size:0.8rem; text-align:center;">
-                                ${well.status}
+                        <div style="text-align:right">
+                            <div style="font-family:'JetBrains Mono'; color:var(--gold); margin-bottom:10px; font-size:0.9rem;">
+                                REPORT DATE: ${well.reportDate}
+                            </div>
+                            <div class="status-pill" style="border: 2px solid ${statusColor}; color: ${statusColor};">
+                                ${well.isActive ? '● ' : ''} ${well.status}
                             </div>
                         </div>
                     </div>
 
                     <div class="visual-stage">
-                        <div class="hud hud-top-1">
+                        <div class="hud hud-top-left">
                             <div class="label">Measured Depth</div>
-                            <div class="num">${well.currentMD.toLocaleString()} <small>FT</small></div>
-                            <div style="margin-top:15px" class="label">True Vertical</div>
-                            <div class="num">${well.currentTVD.toLocaleString()} <small>FT</small></div>
+                            <div class="num">${(well.currentMD||0).toLocaleString()} <small>FT</small></div>
+                            <div style="margin-top:20px" class="label">True Vertical</div>
+                            <div class="num">${(well.currentTVD||0).toLocaleString()} <small>FT</small></div>
                         </div>
-                        <div class="hud hud-top-2">
-                            <div class="label">Incurred Cost</div>
-                            <div class="num num-gold">$${well.costIncurred.toLocaleString()}</div>
-                            <div style="margin-top:15px" class="label">AFE Estimate</div>
-                            <div class="num" style="color:#bbb">$${well.estimatedCost.toLocaleString()}</div>
+
+                        <div class="hud hud-top-right">
+                            <div class="label">Cost Incurred</div>
+                            <div class="num num-gold">$${(well.costIncurred||0).toLocaleString()}</div>
+                            <div style="margin-top:20px" class="label">AFE Estimate</div>
+                            <div class="num" style="color:#888; font-size:1.4rem">$${(well.estimatedCost||0).toLocaleString()}</div>
                         </div>
+
                         <div class="hud hud-bottom">
-                            <div><div class="label">ROP</div><div class="num">${well.rop} <small>F/H</small></div></div>
-                            <div style="width:1px; background:#444"></div>
-                            <div><div class="label">MUD WT</div><div class="num">${well.mudWeight} <small>PPG</small></div></div>
+                            <div><div class="label">ROP</div><div class="num">${well.rop||0} <small>FT/HR</small></div></div>
+                            <div style="width:1px; background:rgba(255,255,255,0.2)"></div>
+                            <div><div class="label">MUD WT</div><div class="num">${well.mudWeight||0} <small>PPG</small></div></div>
                         </div>
 
                         <svg viewBox="0 0 1000 650" style="width:100%; height:100%">
-                            <path d="${dBG}" class="path-bg" />
-                            <path d="${dAct}" class="path-act" stroke="${well.isActive ? 'var(--gold)' : '#555'}" />
-                            <circle cx="${startX}" cy="${startY}" r="8" fill="#444" />
+                            <path d="${pathBG}" class="path-bg" />
+                            
+                            ${pathAct ? `<path d="${pathAct}" class="path-act" stroke="${statusColor}" />` : ''}
+                            
+                            <rect x="${startX-20}" y="${startY-10}" width="40" height="15" fill="#444" />
+                            
+                            ${pathAct ? `<circle cx="${bitX}" cy="${bitY}" r="12" fill="${statusColor}" />` : ''}
                         </svg>
                     </div>
 
                     <div class="notes">
-                        <div class="label" style="color:var(--gold)">Engineer's Daily Summary</div>
-                        <div style="margin-top:10px; line-height:1.6; color:#ccc">${well.dailyNotes}</div>
+                        <div class="label" style="color:var(--gold); font-size:0.8rem;">Engineer Remarks</div>
+                        <div style="line-height:1.6; color:#ccc; margin-top:5px;">${well.dailyNotes || "No remarks filed."}</div>
                     </div>
                 `;
-                container.appendChild(wellDiv);
+                container.appendChild(wellEl);
             });
-        };
-        window.addEventListener('DOMContentLoaded', render);
+        });
     </script>
 </body>
 </html>
