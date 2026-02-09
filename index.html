@@ -274,14 +274,18 @@
                     const targetOffset = fullPixelLength - drawLength;
 
                     // 應用到黃色路徑
-                    pathAct.style.strokeDasharray = fullPixelLength;
+                    pathAct.style.transition = 'none';
                     
-                    // 先重置位置以便觸發 transition
-                    // (這行讓瀏覽器知道初始狀態，確保每次載入都有動畫)
-                    pathAct.style.strokeDashoffset = fullPixelLength; 
-                    pathAct.getBoundingClientRect(); // Trigger Reflow
+                    // 2. 設定線條長度，並將 Offset 設為全滿 (也就是完全隱藏的狀態)
+                    pathAct.style.strokeDasharray = fullPixelLength;
+                    pathAct.style.strokeDashoffset = fullPixelLength;
+                    // 3. 強制瀏覽器立刻渲染這個「隱藏狀態」 (Force Reflow)
+                    // 這行雖然看起來沒做什麼，但它會強迫瀏覽器確認「現在是隱藏的」
+                    pathAct.getBoundingClientRect();
+                    // 4. 把動畫重新打開 (設定過渡效果)
+                    pathAct.style.transition = 'stroke-dashoffset 2s ease-out';
 
-                    // 設定最終位置
+                    // 5. 設定真正的目標位置 (這時候瀏覽器就會從「隱藏」慢慢畫到「目標」)
                     pathAct.style.strokeDashoffset = targetOffset;
                 }
             });
