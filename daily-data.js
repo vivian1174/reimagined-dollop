@@ -32,7 +32,7 @@ const wellsData = [
         rop: 0,
         mudWeight: 12.5,
         dailyNotes: "Rig move in progress."
-    }
+    },
     {
         id: "W-2025-003",
         wellName: "WY CO 2-35-26HC NO.3",
