@@ -119,8 +119,8 @@
                 const uid = index; // Unique ID for this DOM generation
 
                 // 定義路徑幾何 (固定形狀)
-                // M 180,-50 : 起點在視窗上方 50px，這樣圓頭(round cap)就會被切平
-                // V 400 : 垂直鑽到 Y=400 (造斜點視覺位置)
+                // M 180,-50 : 起點在視窗上方 50px
+                // V 400 : 垂直鑽到 Y=400 (垂直段結束點)
                 // Q 180,500 280,500 : 轉彎
                 // H 900 : 水平延伸到 X=900
                 const pathGeometry = "M 180,-50 V 400 Q 180,500 280,500 H 900";
@@ -215,7 +215,7 @@
 
             container.innerHTML = htmlContent;
 
-            // 2. 執行路徑計算邏輯 (DOM 已經存在，可以計算長度了)
+            // 2. 執行路徑計算邏輯 (UPDATED LOGIC)
             wellsData.forEach((well, index) => {
                 const uid = index;
                 const pathBg = document.getElementById(`pathBG-${uid}`);
@@ -225,51 +225,61 @@
                     // 取得整條路徑的總像素長度
                     const fullPixelLength = pathBg.getTotalLength();
                     
-                    // 設定幾何參數 (對應 pathGeometry)
-                    // M 180,-50 V 400 ...
-                    // 垂直段長度 = 400 - (-50) = 450px
-                    // 轉彎段大約是 1/4 圓周 (R=100) -> 2 * PI * 100 / 4 ≈ 157px
-                    // 水平段剩下部分
+                    // 設定幾何參數
+                    // 路徑: M 180,-50 V 400 ...
+                    // 垂直部分像素長度 = 400 - (-50) = 450px
+                    // 我們以 450px 作為視覺上的「造斜點」
                     const verticalPixelLimit = 450; 
                     const horizontalPixelLen = fullPixelLength - verticalPixelLimit;
                     
                     let drawLength = 0;
 
-                    // 假設的計畫深度 (如果數據沒有，給個預設值以免報錯)
-                    const plannedVertical = well.plannedVertical || 10000; 
-                    const plannedHorizontal = well.plannedHorizontal || 10000;
+                    // 取得計畫值 (防呆：若無數據則設為 1，避免除以0)
+                    const pVert = well.plannedVertical > 0 ? well.plannedVertical : 10000;
+                    const pHorz = well.plannedHorizontal > 0 ? well.plannedHorizontal : 10000;
 
-                    // 核心計算邏輯 (User Logic)
-                    if (well.actualHorizontal <= 0 && well.actualVertical <= plannedVertical) {
-                        // 還在垂直段
-                        const vRatio = well.actualVertical / plannedVertical;
-                        drawLength = vRatio * verticalPixelLimit;
+                    // ==========================================
+                    //  核心計算邏輯修正 (Revised Logic)
+                    // ==========================================
+                    
+                    if (well.actualHorizontal > 0) {
+                        // --- 狀況 B: 已經開始水平鑽進 ---
+                        // 1. 強制將垂直段填滿 (因為已經轉彎了)
+                        drawLength = verticalPixelLimit;
+
+                        // 2. 計算水平段比例
+                        const hRatio = well.actualHorizontal / pHorz;
+
+                        // 3. 加上水平段的像素長度
+                        drawLength += (hRatio * horizontalPixelLen);
+
                     } else {
-                        // 已經進入水平段
-                        drawLength = verticalPixelLimit; // 先把垂直段畫滿
+                        // --- 狀況 A: 純垂直鑽進 ---
+                        // 計算垂直完成度
+                        let vRatio = well.actualVertical / pVert;
                         
-                        const hPlanned = plannedHorizontal > 0 ? plannedHorizontal : 1;
-                        const hRatio = well.actualHorizontal / hPlanned;
-                        
-                        // 加上水平段的比例
-                        drawLength += hRatio * horizontalPixelLen;
+                        // 簡單防呆：如果實際深度暫時超過計畫深度，不讓它爆掉
+                        if (vRatio > 1) vRatio = 1;
+
+                        // 映射到垂直像素區段 (0 ~ 450px)
+                        drawLength = vRatio * verticalPixelLimit;
                     }
+                    // ==========================================
 
                     // 邊界檢查
                     if (drawLength > fullPixelLength) drawLength = fullPixelLength;
                     if (drawLength < 0) drawLength = 0;
 
-                    // 計算 offset (stroke-dasharray 技巧)
-                    // DashArray = [實線長, 空白長] -> 設定為 [總長, 總長]
-                    // DashOffset = 總長 - 我們想顯示的長度
+                    // 計算 stroke-dashoffset
                     const targetOffset = fullPixelLength - drawLength;
 
                     // 應用到黃色路徑
                     pathAct.style.strokeDasharray = fullPixelLength;
-                    pathAct.style.strokeDashoffset = fullPixelLength; // 先隱藏
                     
-                    // 強制瀏覽器重繪 (Reflow) 以觸發 transition (如果需要動畫)
-                    pathAct.getBoundingClientRect();
+                    // 先重置位置以便觸發 transition
+                    // (這行讓瀏覽器知道初始狀態，確保每次載入都有動畫)
+                    // pathAct.style.strokeDashoffset = fullPixelLength; 
+                    // pathAct.getBoundingClientRect(); // Trigger Reflow
 
                     // 設定最終位置
                     pathAct.style.strokeDashoffset = targetOffset;
