@@ -60,20 +60,19 @@
         .path-bg { stroke: var(--gray-path); }
         .path-act { stroke: var(--gold); filter: drop-shadow(0 0 15px rgba(251, 191, 36, 0.4)); transition: stroke-dashoffset 1s ease-out; }
         
-        /* ★★★ Fracking 裂縫樣式 (更新) ★★★ */
-        .frack-path {
-            fill: none;
-            stroke-width: 4; /* 裂縫線條較細 */
+        /* ★★★ Fracking 裂縫樣式 (全新設計) ★★★ */
+        .frack-line {
+            fill: none; /* 裂縫是線條，不需要填充 */
+            stroke-width: 5; /* ★ 改細一點，看起來比較像裂縫 */
             stroke-linecap: round;
-            stroke-linejoin: round;
-            filter: drop-shadow(0 0 5px rgba(245, 158, 11, 0.8));
+            stroke-linejoin: round; /* 讓轉角圓滑 */
+            filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.8));
             animation: pulse 1.5s infinite ease-in-out;
-            opacity: 0.8;
         }
 
         @keyframes pulse {
-            0%, 100% { opacity: 0.6; stroke-width: 4; }
-            50% { opacity: 1; stroke-width: 6; }
+            0%, 100% { opacity: 0.6; stroke-width: 5; }
+            50% { opacity: 1; stroke-width: 7; } /* 閃爍時稍微變粗 */
         }
 
         .notes { margin-top: 30px; padding: 25px; background: rgba(255,255,255,0.03); border-radius: 12px; border-left: 4px solid var(--gold); }
@@ -90,45 +89,19 @@
     <script src="daily-data.js"></script>
     
     <script>
-        // 生成隨機裂縫路徑數據的函數
-        function generateFrackPath(startX, startY) {
-            let path = `M ${startX} ${startY}`;
-            const mainLength = 80 + Math.random() * 40; // 主裂縫長度
-            const endY = startY + mainLength;
-            
-            // 主裂縫，帶有隨機彎曲
-            let currentX = startX;
-            let currentY = startY;
-            for (let i = 0; i < 5; i++) {
-                currentY += mainLength / 5;
-                currentX += (Math.random() - 0.5) * 20; // 隨機左右偏移
-                path += ` L ${currentX} ${currentY}`;
-            }
-
-            // 添加一些分支
-            const numBranches = 2 + Math.floor(Math.random() * 3);
-            for (let i = 0; i < numBranches; i++) {
-                const branchStartY = startY + Math.random() * mainLength * 0.8;
-                // 找到主路徑上對應 Y 的大致 X 坐標 (簡化處理)
-                const branchStartX = startX + (Math.random() - 0.5) * 15; 
-                
-                path += ` M ${branchStartX} ${branchStartY}`;
-                
-                const branchLength = 30 + Math.random() * 30;
-                const angle = (Math.random() * Math.PI) / 2 + Math.PI / 4; // 45 到 135 度向下
-                const branchEndX = branchStartX + Math.cos(angle) * branchLength;
-                const branchEndY = branchStartY + Math.sin(angle) * branchLength;
-                
-                // 分支也帶一點彎曲
-                path += ` Q ${branchStartX + (branchEndX - branchStartX)/2 + (Math.random()-0.5)*10} ${branchStartY + (branchEndY - branchStartY)/2} ${branchEndX} ${branchEndY}`;
-            }
-            
-            return path;
-        }
-
         document.addEventListener('DOMContentLoaded', () => {
             const container = document.getElementById('wells-container');
             if (typeof wellsData === 'undefined') return;
+
+            // ★ 定義一個單一裂縫的複雜路徑 (從(0,0)開始向下分支)
+            const singleCrackPath = `
+                M 0,0 
+                l 4,10 l -8,15 l 12,20 l -4,15 
+                M 4,10 l 8,5 l -4,10 
+                M -4,25 l -8,10 l 4,10
+                M 8,45 l 6,10
+                M -8,35 l -6,15
+            `;
 
             let htmlContent = '';
             
@@ -139,22 +112,18 @@
                 const isFracking = well.phase === 'Fracking';
                 const pathGeometry = "M 180,-50 V 400 Q 180,500 280,500 H 900";
 
-                // ★★★ 生成裂縫 SVG 的邏輯 (更新) ★★★
+                // ★★★ 生成裂縫 SVG 的邏輯 (使用 Path) ★★★
                 let frackGroup = '';
                 if (isFracking) {
                     let fissures = '';
                     const startX = 280;
                     const totalLen = 620;
-                    const numFracks = 6; // 裂縫數量
-                    const segment = totalLen / (numFracks + 1);
+                    const segment = totalLen / 6;
 
-                    for (let i = 1; i <= numFracks; i++) {
+                    for (let i = 1; i <= 5; i++) {
                         const x = startX + segment * i;
-                        // y=515 是管線底部邊緣，確保裂縫從管道下方開始
-                        const pathData = generateFrackPath(x, 515);
-                        
-                        // 使用 <path> 元素繪製裂縫，顏色跟隨管道
-                        fissures += `<path d="${pathData}" class="frack-path" stroke="${statusColor}" style="animation-delay: ${Math.random()}s" />`;
+                        // ★ 使用 <path> 元素，並利用 transform 將其定位到正確的 (x, 520) 座標
+                        fissures += `<path d="${singleCrackPath}" class="frack-line" stroke="${statusColor}" transform="translate(${x}, 520)" style="animation-delay: ${Math.random()}s" />`;
                     }
                     frackGroup = `<g>${fissures}</g>`;
                 }
