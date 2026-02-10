@@ -11,7 +11,6 @@
             --glass: rgba(25, 25, 25, 0.85);
             --border: rgba(255, 255, 255, 0.15);
             --gray-path: #333;
-            /*--frack-color: #f59e0b;
         }
         body { margin: 0; background: var(--bg); font-family: 'Inter', sans-serif; color: white; overflow-x: hidden; }
         
@@ -54,26 +53,24 @@
         /* Path 樣式 */
         .path-style { 
             fill: none; 
-            stroke-width: 28; /* 主管線寬度 */
+            stroke-width: 28; 
             stroke-linecap: round; 
             stroke-linejoin: round; 
         }
         .path-bg { stroke: var(--gray-path); }
         .path-act { stroke: var(--gold); filter: drop-shadow(0 0 15px rgba(251, 191, 36, 0.4)); transition: stroke-dashoffset 1s ease-out; }
         
-        /* ★★★ 新增：Fracking 裂縫樣式 (修改後) ★★★ */
+        /* Fracking 裂縫樣式 */
         .frack-line {
-            stroke: var(--frack-color);
-            stroke-width: 28;     /* ★ 修改：與主管線一樣粗 */
-            stroke-linecap: round; /* ★ 修改：圓頭 */
-            filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.8)); /* 增加一點發光感 */
-            animation: pulse 1.5s infinite ease-in-out; /* 加快一點節奏 */
+            stroke-width: 28;    
+            stroke-linecap: round;
+            filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.8));
+            animation: pulse 1.5s infinite ease-in-out;
         }
 
-        /* 讓裂縫呼吸閃爍 (修改後：因為線很粗，寬度變化小一點比較自然) */
         @keyframes pulse {
             0%, 100% { opacity: 0.7; stroke-width: 28; }
-            50% { opacity: 1; stroke-width: 32; } /* 稍微變粗一點點 */
+            50% { opacity: 1; stroke-width: 32; }
         }
 
         .notes { margin-top: 30px; padding: 25px; background: rgba(255,255,255,0.03); border-radius: 12px; border-left: 4px solid var(--gold); }
@@ -103,21 +100,21 @@
                 const isFracking = well.phase === 'Fracking';
                 const pathGeometry = "M 180,-50 V 400 Q 180,500 280,500 H 900";
 
-                // ★★★ 生成裂縫 SVG 的邏輯 (修改後：5根粗線) ★★★
+                // ★★★ 生成裂縫 SVG 的邏輯 (修改位置) ★★★
                 let frackGroup = '';
                 if (isFracking) {
                     let fissures = '';
-                    // 水平段從 X=280 到 X=900，總長度 620
-                    // 我們要畫 5 根，所以將長度分為 6 等份來計算位置
                     const startX = 280;
                     const totalLen = 620;
                     const segment = totalLen / 6;
 
                     for (let i = 1; i <= 5; i++) {
                         const x = startX + segment * i;
-                        // y=500 是水平管線的中心，我們往下畫固定長度 (例如 100px)
-                        // 加上隨機 delay 讓閃爍不同步
-                        fissures += `<line x1="${x}" y1="500" x2="${x}" y2="600" class="frack-line" style="animation-delay: ${Math.random()}s" />`;
+                        
+                        // ★ 修改重點：
+                        // y1="520" (管線底部約在 514，所以 520 確保在管線下方)
+                        // y2="620" (往下延伸 100px)
+                        fissures += `<line x1="${x}" y1="520" x2="${x}" y2="620" class="frack-line" stroke="${statusColor}" style="animation-delay: ${Math.random()}s" />`;
                     }
                     frackGroup = `<g>${fissures}</g>`;
                 }
