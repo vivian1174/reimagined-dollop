@@ -11,7 +11,7 @@
             --glass: rgba(25, 25, 25, 0.85);
             --border: rgba(255, 255, 255, 0.15);
             --gray-path: #333;
-            --frack-color: #f59e0b; /* 稍微深一點的金色 */
+            --frack-color: #f59e0b;
         }
         body { margin: 0; background: var(--bg); font-family: 'Inter', sans-serif; color: white; overflow-x: hidden; }
         
@@ -39,7 +39,7 @@
             border-radius: 20px; border: 1px solid #333; overflow: hidden;
         }
 
-        /* HUD 樣式 (維持不變) */
+        /* HUD 樣式 */
         .hud-container { position: absolute; top: 40px; right: 40px; display: grid; grid-template-columns: 240px 280px; gap: 20px; z-index: 10; }
         .hud-box-tall { grid-column: 1; grid-row: 1 / span 2; background: var(--glass); backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: 16px; padding: 25px; display: flex; flex-direction: column; justify-content: center; gap: 25px; }
         .hud-box-cost { grid-column: 2; grid-row: 1; background: var(--glass); backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: 16px; padding: 20px 25px; text-align: right; }
@@ -52,23 +52,28 @@
         .v-divider { width: 1px; background: rgba(255,255,255,0.1); height: 40px; }
 
         /* Path 樣式 */
-        .path-style { fill: none; stroke-width: 28; stroke-linecap: round; stroke-linejoin: round; }
+        .path-style { 
+            fill: none; 
+            stroke-width: 28; /* 主管線寬度 */
+            stroke-linecap: round; 
+            stroke-linejoin: round; 
+        }
         .path-bg { stroke: var(--gray-path); }
         .path-act { stroke: var(--gold); filter: drop-shadow(0 0 15px rgba(251, 191, 36, 0.4)); transition: stroke-dashoffset 1s ease-out; }
         
-        /* ★★★ 新增：Fracking 裂縫樣式 ★★★ */
+        /* ★★★ 新增：Fracking 裂縫樣式 (修改後) ★★★ */
         .frack-line {
             stroke: var(--frack-color);
-            stroke-width: 4;
-            stroke-linecap: round;
-            filter: drop-shadow(0 0 5px rgba(245, 158, 11, 0.6));
-            animation: pulse 2s infinite ease-in-out;
+            stroke-width: 28;     /* ★ 修改：與主管線一樣粗 */
+            stroke-linecap: round; /* ★ 修改：圓頭 */
+            filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.8)); /* 增加一點發光感 */
+            animation: pulse 1.5s infinite ease-in-out; /* 加快一點節奏 */
         }
 
-        /* 讓裂縫呼吸閃爍 */
+        /* 讓裂縫呼吸閃爍 (修改後：因為線很粗，寬度變化小一點比較自然) */
         @keyframes pulse {
-            0%, 100% { opacity: 0.6; stroke-width: 3; }
-            50% { opacity: 1; stroke-width: 5; }
+            0%, 100% { opacity: 0.7; stroke-width: 28; }
+            50% { opacity: 1; stroke-width: 32; } /* 稍微變粗一點點 */
         }
 
         .notes { margin-top: 30px; padding: 25px; background: rgba(255,255,255,0.03); border-radius: 12px; border-left: 4px solid var(--gold); }
@@ -95,31 +100,24 @@
                 const isActive = well.isActive;
                 const statusColor = isActive ? 'var(--gold)' : '#555';
                 const uid = index;
-                // 判斷是否為 Fracking 模式
                 const isFracking = well.phase === 'Fracking';
-
                 const pathGeometry = "M 180,-50 V 400 Q 180,500 280,500 H 900";
 
-                // ★★★ 生成裂縫 SVG 的邏輯 ★★★
+                // ★★★ 生成裂縫 SVG 的邏輯 (修改後：5根粗線) ★★★
                 let frackGroup = '';
                 if (isFracking) {
-                    // 水平段大約從 X=280 開始，到 X=900 結束
-                    // 我們在水平段每隔一段距離畫一條向下的線
                     let fissures = '';
-                    const startX = 320; // 稍微避開轉彎處
-                    const endX = 880;
-                    const gap = 60;     // 裂縫間距
+                    // 水平段從 X=280 到 X=900，總長度 620
+                    // 我們要畫 5 根，所以將長度分為 6 等份來計算位置
+                    const startX = 280;
+                    const totalLen = 620;
+                    const segment = totalLen / 6;
 
-                    for (let x = startX; x <= endX; x += gap) {
-                        // 隨機長度，讓它看起來自然一點 (40px ~ 70px)
-                        const len = 40 + Math.random() * 30;
-                        // Y=500 是水平管線的中心，我們往下畫
-                        // x1,y1 是起點(管線上)，x2,y2 是終點(地層深處)
-                        fissures += `<line x1="${x}" y1="515" x2="${x}" y2="${515 + len}" class="frack-line" style="animation-delay: ${Math.random()}s" />`;
-                        
-                        // 可選：加一點小分支 (像樹根一樣)
-                        fissures += `<line x1="${x}" y1="${515 + len}" x2="${x - 10}" y2="${515 + len + 10}" class="frack-line" opacity="0.5" />`;
-                        fissures += `<line x1="${x}" y1="${515 + len}" x2="${x + 10}" y2="${515 + len + 10}" class="frack-line" opacity="0.5" />`;
+                    for (let i = 1; i <= 5; i++) {
+                        const x = startX + segment * i;
+                        // y=500 是水平管線的中心，我們往下畫固定長度 (例如 100px)
+                        // 加上隨機 delay 讓閃爍不同步
+                        fissures += `<line x1="${x}" y1="500" x2="${x}" y2="600" class="frack-line" style="animation-delay: ${Math.random()}s" />`;
                     }
                     frackGroup = `<g>${fissures}</g>`;
                 }
@@ -127,90 +125,56 @@
                 htmlContent += `
                 <div class="well-unit">
                     <div class="header-flex">
-                        <div class="well-info">
-                            <h1 class="well-name">${well.wellName}</h1>
-                            <div class="location">${well.location}</div>
-                        </div>
-                        <div style="text-align:right">
-                            <div style="font-family:'JetBrains Mono'; color:var(--gold); margin-bottom:10px; font-size:0.9rem;">
-                                REPORT DATE: ${well.reportDate}
-                            </div>
-                            <div class="status-pill" style="border: 2px solid ${statusColor}; color: ${statusColor};">
-                                ${well.isActive ? '● ' : ''} ${well.status}
-                            </div>
-                        </div>
+                        <div class="well-info"><h1 class="well-name">${well.wellName}</h1><div class="location">${well.location}</div></div>
+                        <div style="text-align:right"><div style="font-family:'JetBrains Mono'; color:var(--gold); margin-bottom:10px; font-size:0.9rem;">REPORT DATE: ${well.reportDate}</div><div class="status-pill" style="border: 2px solid ${statusColor}; color: ${statusColor};">${well.isActive ? '● ' : ''} ${well.status}</div></div>
                     </div>
 
                     <div class="visual-stage">
                         <div class="hud-container">
                             <div class="hud-box-tall">
-                                <div><div class="label">Current MD</div><div class="num">${(well.currentMD||0).toLocaleString()} <span class="unit">ft</span></div></div>
-                                <div class="divider"></div>
-                                <div><div class="label">Current TVD</div><div class="num">${(well.currentTVD||0).toLocaleString()} <span class="unit">ft</span></div></div>
-                                <div class="divider"></div>
+                                <div><div class="label">Current MD</div><div class="num">${(well.currentMD||0).toLocaleString()} <span class="unit">ft</span></div></div><div class="divider"></div>
+                                <div><div class="label">Current TVD</div><div class="num">${(well.currentTVD||0).toLocaleString()} <span class="unit">ft</span></div></div><div class="divider"></div>
                                 <div><div class="label">Actual Vertical</div><div class="num" style="font-size:1.2rem">${(well.actualVertical||0).toLocaleString()} <span class="unit">ft</span></div></div>
                                 <div><div class="label">Actual Horizontal</div><div class="num" style="font-size:1.2rem">${(well.actualHorizontal||0).toLocaleString()} <span class="unit">ft</span></div></div>
                             </div>
-                            <div class="hud-box-cost">
-                                <div class="label">Cumulative Cost</div><div class="num num-gold">$${(well.costIncurred||0).toLocaleString()}</div>
-                                <div style="margin-top:10px"><div class="label">Estimated Total</div><div class="num" style="color:#aaa; font-size:1.1rem">$${(well.estimatedCost||0).toLocaleString()}</div></div>
-                            </div>
-                            <div class="hud-box-sensor">
-                                <div><div class="label">ROP</div><div class="num">${well.rop||0} <span class="unit">ft/hr</span></div></div>
-                                <div class="v-divider"></div>
-                                <div style="text-align:right"><div class="label">MW</div><div class="num">${well.mudWeight||0} <span class="unit">ppg</span></div></div>
-                            </div>
+                            <div class="hud-box-cost"><div><div class="label">Cumulative Cost</div><div class="num num-gold">$${(well.costIncurred||0).toLocaleString()}</div></div><div style="margin-top:10px"><div class="label">Estimated Total</div><div class="num" style="color:#aaa; font-size:1.1rem">$${(well.estimatedCost||0).toLocaleString()}</div></div></div>
+                            <div class="hud-box-sensor"><div><div class="label">ROP</div><div class="num">${well.rop||0} <span class="unit">ft/hr</span></div></div><div class="v-divider"></div><div style="text-align:right"><div class="label">MW</div><div class="num">${well.mudWeight||0} <span class="unit">ppg</span></div></div></div>
                         </div>
 
                         <svg viewBox="0 0 1000 650" style="width:100%; height:100%">
-                            <defs>
-                                <clipPath id="wellClip${uid}">
-                                    <rect x="0" y="0" width="1000" height="650" />
-                                </clipPath>
-                            </defs>
-
+                            <defs><clipPath id="wellClip${uid}"><rect x="0" y="0" width="1000" height="650" /></clipPath></defs>
                             <g clip-path="url(#wellClip${uid})">
                                 <path id="pathBG-${uid}" d="${pathGeometry}" class="path-style path-bg" />
-                                
                                 <path id="pathAct-${uid}" d="${pathGeometry}" class="path-style path-act" stroke="${statusColor}" />
                                 
                                 ${frackGroup}
                             </g>
-                            
                             <rect x="160" y="-2" width="40" height="10" fill="#222" />
                         </svg>
                     </div>
-
-                    <div class="notes">
-                        <div class="label" style="color:var(--gold); font-size:0.8rem;">Engineer Remarks</div>
-                        <div style="line-height:1.6; color:#ccc; margin-top:5px;">${well.dailyNotes || "No remarks filed."}</div>
-                    </div>
+                    <div class="notes"><div class="label" style="color:var(--gold); font-size:0.8rem;">Engineer Remarks</div><div style="line-height:1.6; color:#ccc; margin-top:5px;">${well.dailyNotes || "No remarks filed."}</div></div>
                 </div>
                 `;
             });
 
             container.innerHTML = htmlContent;
 
-            // 計算動畫邏輯 (Updated Logic)
+            // 動畫邏輯 (保持不變)
             wellsData.forEach((well, index) => {
                 const uid = index;
                 const pathBg = document.getElementById(`pathBG-${uid}`);
                 const pathAct = document.getElementById(`pathAct-${uid}`);
-
                 if (pathBg && pathAct) {
                     const fullPixelLength = pathBg.getTotalLength();
                     const verticalPixelLimit = 450; 
                     const horizontalPixelLen = fullPixelLength - verticalPixelLimit;
                     let drawLength = 0;
 
-                    // ★ 特別判斷：如果是 Fracking，通常代表鑽井已經完成，所以主線應該要畫滿
                     if (well.phase === 'Fracking') {
                         drawLength = fullPixelLength;
                     } else {
-                        // 正常的 Drilling 計算邏輯 (保持原樣)
                         const pVert = well.plannedVertical > 0 ? well.plannedVertical : 10000;
                         const pHorz = well.plannedHorizontal > 0 ? well.plannedHorizontal : 10000;
-
                         if (well.actualHorizontal > 0) {
                             drawLength = verticalPixelLimit;
                             const hRatio = well.actualHorizontal / pHorz;
@@ -221,12 +185,9 @@
                             drawLength = vRatio * verticalPixelLimit;
                         }
                     }
-
                     if (drawLength > fullPixelLength) drawLength = fullPixelLength;
                     if (drawLength < 0) drawLength = 0;
                     const targetOffset = fullPixelLength - drawLength;
-
-                    // 動畫設定
                     pathAct.style.transition = 'none';
                     pathAct.style.strokeDasharray = fullPixelLength;
                     pathAct.style.strokeDashoffset = fullPixelLength;
