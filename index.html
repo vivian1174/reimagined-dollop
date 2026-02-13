@@ -60,19 +60,19 @@
         .path-bg { stroke: var(--gray-path); }
         .path-act { stroke: var(--gold); filter: drop-shadow(0 0 15px rgba(251, 191, 36, 0.4)); transition: stroke-dashoffset 1s ease-out; }
         
-        /* ★★★ Fracking 裂縫樣式 (全新設計) ★★★ */
+        /* Fracking 裂縫樣式 */
         .frack-line {
-            fill: none; /* 裂縫是線條，不需要填充 */
-            stroke-width: 5; /* ★ 改細一點，看起來比較像裂縫 */
+            fill: none; 
+            stroke-width: 5; 
             stroke-linecap: round;
-            stroke-linejoin: round; /* 讓轉角圓滑 */
+            stroke-linejoin: round; 
             filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.8));
             animation: pulse 1.5s infinite ease-in-out;
         }
 
         @keyframes pulse {
             0%, 100% { opacity: 0.6; stroke-width: 5; }
-            50% { opacity: 1; stroke-width: 7; } /* 閃爍時稍微變粗 */
+            50% { opacity: 1; stroke-width: 7; }
         }
 
         .notes { margin-top: 30px; padding: 25px; background: rgba(255,255,255,0.03); border-radius: 12px; border-left: 4px solid var(--gold); }
@@ -93,7 +93,6 @@
             const container = document.getElementById('wells-container');
             if (typeof wellsData === 'undefined') return;
 
-            // ★ 定義一個單一裂縫的複雜路徑 (從(0,0)開始向下分支)
             const singleCrackPath = `
                 M 0,0 
                 l 4,10 l -8,15 l 12,20 l -4,15 
@@ -112,17 +111,23 @@
                 const isFracking = well.phase === 'Fracking';
                 const pathGeometry = "M 180,-50 V 400 Q 180,500 280,500 H 900";
 
-                // ★★★ 生成裂縫 SVG 的邏輯 (使用 Path) ★★★
+                // 計算預算百分比
+                let costPercent = 0;
+                if (well.estimatedCost > 0) {
+                    costPercent = (well.costIncurred / well.estimatedCost) * 100;
+                }
+                
+                // 如果超支 (>100%)，數字變紅色，否則為白色
+                const percentColor = costPercent > 100 ? '#ef4444' : '#fff';
+
                 let frackGroup = '';
                 if (isFracking) {
                     let fissures = '';
                     const startX = 280;
                     const totalLen = 620;
                     const segment = totalLen / 6;
-
                     for (let i = 1; i <= 5; i++) {
                         const x = startX + segment * i;
-                        // ★ 使用 <path> 元素，並利用 transform 將其定位到正確的 (x, 520) 座標
                         fissures += `<path d="${singleCrackPath}" class="frack-line" stroke="${statusColor}" transform="translate(${x}, 520)" style="animation-delay: ${Math.random()}s" />`;
                     }
                     frackGroup = `<g>${fissures}</g>`;
@@ -143,7 +148,26 @@
                                 <div><div class="label">Actual Vertical</div><div class="num" style="font-size:1.2rem">${(well.actualVertical||0).toLocaleString()} <span class="unit">ft</span></div></div>
                                 <div><div class="label">Actual Horizontal</div><div class="num" style="font-size:1.2rem">${(well.actualHorizontal||0).toLocaleString()} <span class="unit">ft</span></div></div>
                             </div>
-                            <div class="hud-box-cost"><div><div class="label">Cumulative Cost</div><div class="num num-gold">$${(well.costIncurred||0).toLocaleString()}</div></div><div style="margin-top:10px"><div class="label">Estimated Total</div><div class="num" style="color:#aaa; font-size:1.1rem">$${(well.estimatedCost||0).toLocaleString()}</div></div></div>
+                            
+                            <div class="hud-box-cost">
+                                <div>
+                                    <div class="label">Cumulative Cost</div>
+                                    <div class="num num-gold">$${(well.costIncurred||0).toLocaleString()}</div>
+                                </div>
+                                <div style="margin-top:10px">
+                                    <div class="label">Estimated Total</div>
+                                    <div class="num" style="color:#aaa; font-size:1.1rem">$${(well.estimatedCost||0).toLocaleString()}</div>
+                                </div>
+                                
+                                <div style="width:100%; height:1px; background:rgba(255,255,255,0.1); margin: 15px 0;"></div>
+
+                                <div>
+                                    <div class="label">Budget Usage</div>
+                                    <div class="num" style="color:${percentColor}; font-size:1.2rem;">
+                                        ${costPercent.toFixed(1)}%
+                                    </div>
+                                </div>
+                            </div>
                             <div class="hud-box-sensor"><div><div class="label">ROP</div><div class="num">${well.rop||0} <span class="unit">ft/hr</span></div></div><div class="v-divider"></div><div style="text-align:right"><div class="label">MW</div><div class="num">${well.mudWeight||0} <span class="unit">ppg</span></div></div></div>
                         </div>
 
@@ -152,7 +176,6 @@
                             <g clip-path="url(#wellClip${uid})">
                                 <path id="pathBG-${uid}" d="${pathGeometry}" class="path-style path-bg" />
                                 <path id="pathAct-${uid}" d="${pathGeometry}" class="path-style path-act" stroke="${statusColor}" />
-                                
                                 ${frackGroup}
                             </g>
                             <rect x="160" y="-2" width="40" height="10" fill="#222" />
@@ -165,7 +188,6 @@
 
             container.innerHTML = htmlContent;
 
-            // 動畫邏輯 (保持不變)
             wellsData.forEach((well, index) => {
                 const uid = index;
                 const pathBg = document.getElementById(`pathBG-${uid}`);
