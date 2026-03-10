@@ -1,23 +1,23 @@
 const wellsData = [
     {
-        id: "W-2025-001",
-        wellName: "Davies 23-14-11 No. 1-Alt",
+        id: "W-2026-001",
+        wellName: "Davies 24-13-12HC No. 1 Alt",
         isActive: true,
         location: "Bienville Parish, LA",
-        status: "Fracking Stage 4", // 狀態文字
-        phase: "Fracking",          // ★ 新增標記：Fracking (會顯示裂縫) 或 Drilling
-        reportDate: "2025/12/15",
-        currentMD: 24185,
-        currentTVD: 14780,
-        plannedVertical: 14990,
-        plannedHorizontal: 12214,
-        actualVertical: 14990,
-        actualHorizontal: 10575,
-        costIncurred: 6278680,
-        estimatedCost: 6121369,
+        status: "Frac Stage 40 of 54",
+        phase: "Fracking",
+        reportDate: "2026/3/9",
+        currentMD: 20719,
+        currentTVD: 13097,
+        plannedVertical: 13097,
+        plannedHorizontal: 8467,
+        actualVertical: 13097,
+        actualHorizontal: 8467,
+        costIncurred: 3406217,
+        estimatedCost: 6380000,
         rop: 0,
-        mudWeight: 16.5,
-        dailyNotes: "Stage 4 fracking in progress. Pressure holding steady."
+        mudWeight: 0,
+        dailyNotes: "Frac Stage 40/54 complete. Perf Stages 37–41 completed. Avg frac rate ~83–86 bpm, avg pressure ~10,600–11,800 psi. 100% prop placed on all stages. Next: 24-hr Frac Ops continuing."
     },
     {
         id: "W-2025-003",
@@ -25,14 +25,14 @@ const wellsData = [
         isActive: true,
         location: "Bienville Parish, LA",
         status: "Horizonal Drilling",
-        phase: "Drilling",          // ★ 標記為 Drilling (維持原本動畫)
+        phase: "Drilling",
         reportDate: "2026/1/15",
         currentMD: 18000,
         currentTVD: 14780,
         plannedVertical: 15300,
         plannedHorizontal: 12214,
-        actualVertical: 15300,      // 垂直已完
-        actualHorizontal: 3000,     // 水平鑽進中
+        actualVertical: 15300,
+        actualHorizontal: 3000,
         costIncurred: 482396,
         estimatedCost: 10986555,
         rop: 120,
